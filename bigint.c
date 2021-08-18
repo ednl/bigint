@@ -4,34 +4,37 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define CHUNK (128U)
+#define UNIT  (100000000U)
+#define WIDTH "8"
+#define CHUNK (1024U)
 
 typedef struct {
-    unsigned char *digit;
-    size_t len, size;
+    uint32_t *part;
+    size_t    len, maxlen;
 } BigInt, *pBigInt;
 
 static void clean(pBigInt a)
 {
-    if (a->digit != NULL) {
-        free(a->digit);
-        a->digit = NULL;
+    if (a->part != NULL) {
+        free(a->part);
+        a->part = NULL;
     }
-    a->size = 0;
+    a->maxlen = 0;
     a->len = 0;
 }
 
 static bool init(pBigInt a)
 {
-    void *p = a->digit ? realloc(a->digit, CHUNK) : malloc(CHUNK);
+    size_t memsize = CHUNK * sizeof *a->part;
+    void *p = a->part ? realloc(a->part, memsize) : malloc(memsize);
     if (p == NULL) {
         clean(a);
         return false;
     }
-    a->digit = (unsigned char *)p;
-    a->size = CHUNK;
+    a->part = (uint32_t *)p;
+    a->maxlen = CHUNK;
     a->len = 0;
-    memset(a->digit, 0, CHUNK);
+    memset(a->part, 0, memsize);
     return true;
 }
 
@@ -41,35 +44,36 @@ static bool setval(pBigInt a, uint64_t val)
         return false;
     }
     while (val) {
-        a->digit[a->len++] = val % 10;
-        val /= 10;
+        a->part[a->len++] = val % UNIT;
+        val /= UNIT;
     }
     return true;
 }
 
-static bool resize(pBigInt a, size_t size)
+static bool resize(pBigInt a, size_t newlen)
 {
-    if (size == 0) {
+    if (newlen == 0) {
         clean(a);
         return true;
     }
-    unsigned int m = size % CHUNK;
+    unsigned int m = newlen % CHUNK;
     if (m) {
-        size += CHUNK - m;
+        newlen += CHUNK - m;
     }
-    if (size < a->len) {
+    if (newlen < a->len) {
         return false;
     }
-    if (size != a->size) {
-        void *p = a->digit ? realloc(a->digit, size) : malloc(size);
+    if (newlen != a->maxlen) {
+        size_t memsize = newlen * sizeof *a->part;
+        void *p = a->part ? realloc(a->part, memsize) : malloc(memsize);
         if (p == NULL) {
             return false;
         }
-        a->digit = (unsigned char *)p;
-        if (size > a->size) {
-            memset(a->digit + a->size, 0, size - a->size);
+        a->part = (uint32_t *)p;
+        if (newlen > a->maxlen) {
+            memset(a->part + a->maxlen, 0, (newlen - a->maxlen) * sizeof *a->part);
         }
-        a->size = size;
+        a->maxlen = newlen;
     }
     return true;
 }
@@ -78,17 +82,17 @@ static bool resize(pBigInt a, size_t size)
 static bool add(pBigInt a, pBigInt b, pBigInt c)
 {
     size_t maxlen = (a->len > b->len ? a->len : b->len) + 1;
-    if (maxlen > c->size && !resize(c, maxlen)) {
+    if (maxlen > c->maxlen && !resize(c, maxlen)) {
         return false;
     }
     size_t i = 0;
-    unsigned char sum = 0;
+    uint32_t sum = 0;
     while (i < a->len || i < b->len || sum) {
-        unsigned char p = i < a->len ? a->digit[i] : 0;
-        unsigned char q = i < b->len ? b->digit[i] : 0;
+        uint32_t p = i < a->len ? a->part[i] : 0;
+        uint32_t q = i < b->len ? b->part[i] : 0;
         sum += p + q;
-        c->digit[i++] = sum % 10;
-        sum /= 10;
+        c->part[i++] = sum % UNIT;
+        sum /= UNIT;
     }
     c->len = i;
     return true;
@@ -101,8 +105,9 @@ static void print(pBigInt a)
         printf("0\n");
         return;
     }
+    printf("%d", a->part[--i]);  // no leading zeros on left-most part
     while (i--) {
-        printf("%d", a->digit[i]);
+        printf("%0"WIDTH"d", a->part[i]);
     }
     printf("\n");
 }
@@ -131,9 +136,9 @@ int main(int argc, char *argv[])
         }
     }
     switch (i) {
-        case 0: print(&a); break;
-        case 1: print(&b); break;
-        case 2: print(&c); break;
+        case 0: print(&a); printf("%zu", a.len); break;
+        case 1: print(&b); printf("%zu", b.len); break;
+        case 2: print(&c); printf("%zu", c.len); break;
     }
 
     clean(&a);
