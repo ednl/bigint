@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define UNIT  (1000000U)
-#define WIDTH "6"
+#define UNIT  (100000000U)
+#define WIDTH "8"
 #define CHUNK (1024U)
 
 typedef struct {
@@ -102,14 +102,14 @@ static void print(pBigInt a)
 {
     size_t i = a->len;
     if (i == 0) {
-        printf("0\n");
+        printf("0 (0)\n");
         return;
     }
     printf("%u", a->part[--i]);  // no leading zeros on left-most part
     while (i--) {
         printf(" %0"WIDTH"u", a->part[i]);
     }
-    printf("\n");
+    printf(" (%zu)\n", a->len);
 }
 
 int main(int argc, char *argv[])
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     BigInt a = {0}, b = {0}, c = {0};
     setval(&a, 0);
     setval(&b, 1);
-    init(&c);
+    setval(&c, 1);
 
     int n = 0;
     if (argc > 1) {
@@ -126,19 +126,18 @@ int main(int argc, char *argv[])
             n = 0;
         }
     }
+    int m = n % 3;
+    n /= 3;
 
-    unsigned int i = 0;
     while (n--) {
-        switch (i) {
-            case 0: add(&a, &b, &c); i = 1; break;
-            case 1: add(&b, &c, &a); i = 2; break;
-            case 2: add(&c, &a, &b); i = 0; break;
-        }
+        add(&b, &c, &a);
+        add(&c, &a, &b);
+        add(&a, &b, &c);
     }
-    switch (i) {
-        case 0: print(&a); printf("%zu", a.len); break;
-        case 1: print(&b); printf("%zu", b.len); break;
-        case 2: print(&c); printf("%zu", c.len); break;
+    switch (m) {
+        case 0: print(&a); break;
+        case 1: print(&b); break;
+        case 2: print(&c); break;
     }
 
     clean(&a);
