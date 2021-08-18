@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define UNIT  (100000000U)
-#define WIDTH "8"
+#define UNIT  (1000000U)
+#define WIDTH "6"
 #define CHUNK (1024U)
 
 typedef struct {
@@ -105,9 +105,9 @@ static void print(pBigInt a)
         printf("0\n");
         return;
     }
-    printf("%d", a->part[--i]);  // no leading zeros on left-most part
+    printf("%u", a->part[--i]);  // no leading zeros on left-most part
     while (i--) {
-        printf("%0"WIDTH"d", a->part[i]);
+        printf(" %0"WIDTH"u", a->part[i]);
     }
     printf("\n");
 }
