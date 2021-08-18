@@ -98,16 +98,41 @@ static bool resize(pBigInt a, size_t newlen)
 // Add a + b, put result in c
 static bool add(pBigInt a, pBigInt b, pBigInt c)
 {
-    size_t maxlen = (a->len > b->len ? a->len : b->len) + 1;
-    if (maxlen > c->maxlen && !resize(c, maxlen)) {
+    BigInt *t;
+    size_t i = 0, minlen, maxlen, needed;
+
+    if (a->len < b->len) {
+        minlen = a->len;
+        maxlen = b->len;
+        t = b;
+    } else {
+        minlen = b->len;
+        maxlen = a->len;
+        t = a;
+    }
+
+    needed = maxlen + 1;
+    if (needed > c->maxlen && !resize(c, needed)) {
         return false;
     }
-    size_t i = 0;
+
     PartType sum = 0;  // partial sum and carry
-    while (i < a->len || i < b->len || sum) {
-        PartType p = i < a->len ? a->part[i] : 0;
-        PartType q = i < b->len ? b->part[i] : 0;
-        sum += p + q;
+    while (i < minlen) {
+        sum += a->part[i] + b->part[i];
+        c->part[i++] = sum % UNIT;
+        sum /= UNIT;
+    }
+    while (i < maxlen) {
+        if (sum) {
+            sum += t->part[i];  // t = the one that's longer
+            c->part[i] = sum % UNIT;
+            sum /= UNIT;
+        } else {
+            c->part[i] = t->part[i];
+        }
+        ++i;
+    }
+    while (sum) {
         c->part[i++] = sum % UNIT;
         sum /= UNIT;
     }
