@@ -1,2 +1,2 @@
 # bigint
-Own, naive implementation of arbitrarily large integer numbers
+My own, very simple implementation of arbitrarily large integer numbers.
