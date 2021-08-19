@@ -1,8 +1,9 @@
 #include <stdio.h>    // printf
 #include <stdlib.h>   // malloc
-#include <stdint.h>   // uint32_t
+#include <stdint.h>   // uint64_t
 #include <stdbool.h>  // bool
 #include <string.h>   // memset
+#include <pthread/qos.h>  // thread priority
 
 // Number of values in one part of the bigint array = 1.10^WIDTH
 #define UNIT  (10000000000000000ULL)
@@ -97,7 +98,7 @@ static bool resize(pBigInt a, size_t newlen)
 }
 
 // Add a + b, put result in c
-static bool add(pBigInt a, pBigInt b, pBigInt c)
+static inline bool add(pBigInt a, pBigInt b, pBigInt c)
 {
     size_t i = 0, minlen, maxlen, needed;
     BigInt *t;
@@ -159,12 +160,19 @@ static void print(pBigInt a)
 
 int main(int argc, char *argv[])
 {
+    // Set thread priority user interactive = use performance core
+    int e = pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+    if (e) {
+        printf("Pthread error: %d\n", e);
+        exit(1);
+    }
+
     BigInt a = {0}, b = {0}, c = {0};
     setval(&a, 0);
     setval(&b, 1);
     setval(&c, 1);
 
-    // Get requested Fibonacci number from command line
+    // Get requested Fibonacci ordinal from command line
     int n = 0;
     if (argc > 1) {
         n = atoi(argv[1]);
