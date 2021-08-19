@@ -4,17 +4,17 @@
 #include <stdbool.h>  // bool
 #include <string.h>   // memset
 
-// Maximum value of each part of the bigint array
-#define UNIT  (100000000U)
+// Number of values in one part of the bigint array = 1.10^WIDTH
+#define UNIT  (10000000000000000ULL)
 
-// Width in digits of each part
-#define WIDTH "8"
+// Width in decimal digits of each part = log10(UNIT)
+#define WIDTH "16"
 
 // Number of parts to add when increasing the size of the bigint
-#define CHUNK (1024U)
+#define CHUNK (4096ULL)
 
 // The building blocks of the bigint value
-typedef uint32_t PartType, *pPartType;
+typedef uint64_t PartType, *pPartType;
 
 // BigInt type
 typedef struct {
@@ -42,10 +42,10 @@ static bool init(pBigInt a)
         clean(a);
         return false;
     }
+    memset(p, 0, memsize);
     a->part = (PartType *)p;
     a->maxlen = CHUNK;
     a->len = 0;
-    memset(a->part, 0, memsize);
     return true;
 }
 
@@ -71,7 +71,7 @@ static bool resize(pBigInt a, size_t newlen)
         clean(a);
         return true;
     }
-    unsigned int m = newlen % CHUNK;
+    size_t m = newlen % CHUNK;
     if (m) {
         newlen += CHUNK - m;
     }
@@ -88,6 +88,7 @@ static bool resize(pBigInt a, size_t newlen)
         a->part = (PartType *)p;
         if (newlen > a->maxlen) {
             // Zero out the newly added memory
+            // (here because pointer arithmatic with void pointers not part of the standard)
             memset(a->part + a->maxlen, 0, (newlen - a->maxlen) * sizeof(PartType));
         }
         a->maxlen = newlen;
@@ -98,8 +99,8 @@ static bool resize(pBigInt a, size_t newlen)
 // Add a + b, put result in c
 static bool add(pBigInt a, pBigInt b, pBigInt c)
 {
-    BigInt *t;
     size_t i = 0, minlen, maxlen, needed;
+    BigInt *t;
 
     if (a->len < b->len) {
         minlen = a->len;
@@ -148,10 +149,10 @@ static void print(pBigInt a)
         printf("0 (0)\n");
         return;
     }
-    printf("%u", a->part[--i]);  // no leading zeros on left-most part
+    printf("%llu", a->part[--i]);  // no leading zeros on left-most part
     while (i--) {
         // Print in chunks of WIDTH digits
-        printf(" %0"WIDTH"u", a->part[i]);
+        printf(" %0"WIDTH"llu", a->part[i]);
     }
     printf(" (%zu)\n", a->len);  // parts count for reference
 }
@@ -172,7 +173,7 @@ int main(int argc, char *argv[])
         }
     }
     int m = n % 3;
-    n /= 3;  // while loop below is unrolled by 3
+    n /= 3;  // while-loop below is unrolled by 3
 
     while (n--) {
         add(&b, &c, &a);
