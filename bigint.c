@@ -3,7 +3,9 @@
 #include <stdint.h>   // uint64_t
 #include <stdbool.h>  // bool
 #include <string.h>   // memset
+#ifdef __APPLE__
 #include <pthread/qos.h>  // thread priority
+#endif
 
 // Number of values in one part of the bigint array = 1.10^WIDTH
 #define UNIT  (10000000000000000ULL)
@@ -160,12 +162,14 @@ static void print(pBigInt a)
 
 int main(int argc, char *argv[])
 {
+    #ifdef __APPLE__
     // Set thread priority user interactive = use performance core
     int e = pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
     if (e) {
         printf("Pthread error: %d\n", e);
         exit(1);
     }
+    #endif
 
     BigInt a = {0}, b = {0}, c = {0};
     setval(&a, 0);
