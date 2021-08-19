@@ -1,8 +1,9 @@
-#include <stdio.h>    // printf
-#include <stdlib.h>   // malloc
-#include <stdint.h>   // uint64_t
-#include <stdbool.h>  // bool
-#include <string.h>   // memset
+#include <stdio.h>     // printf
+#include <stdlib.h>    // malloc
+#include <stdint.h>    // uint64_t
+#include <inttypes.h>  // PRIu64
+#include <stdbool.h>   // bool
+#include <string.h>    // memset
 #ifdef __APPLE__
 #include <pthread/qos.h>  // thread priority
 #endif
@@ -152,10 +153,10 @@ static void print(pBigInt a)
         printf("0 (0)\n");
         return;
     }
-    printf("%llu", a->part[--i]);  // no leading zeros on left-most part
+    printf("%"PRIu64, a->part[--i]);  // no leading zeros on left-most part
     while (i--) {
         // Print in chunks of WIDTH digits
-        printf(" %0"WIDTH"llu", a->part[i]);
+        printf(" %0"WIDTH""PRIu64, a->part[i]);
     }
     printf(" (%zu)\n", a->len);  // parts count for reference
 }
