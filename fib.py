@@ -2,11 +2,10 @@
 
 from sys import argv
 
-N = 0
-if len(argv) > 1:
+try:
     N = int(argv[1])
-    if N < 0:
-        N = -N
+except (IndexError, ValueError):
+    exit("Not a number")
 
 a = 0
 b = 1
