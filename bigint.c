@@ -100,8 +100,6 @@ static bool resize(pBigInt a, size_t newlen)
     return true;
 }
 
-static uint64_t p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0, p6 = 0;
-
 // Add a + b, put result in c
 static inline bool add(pBigInt a, pBigInt b, pBigInt c)
 {
@@ -129,11 +127,9 @@ static inline bool add(pBigInt a, pBigInt b, pBigInt c)
         if (sum < UNIT) {
             c->part[i++] = sum;
             sum = 0;  // no carry
-            // ++p1;  // profiling
         } else {
             c->part[i++] = sum - UNIT;
             sum = 1;  // for addition, carry can only be 0 or 1
-            // ++p2;  // profiling
         }
     }
     while (i < maxlen) {
@@ -142,21 +138,21 @@ static inline bool add(pBigInt a, pBigInt b, pBigInt c)
             if (sum < UNIT) {
                 c->part[i] = sum;
                 sum = 0;  // no carry
-                // ++p3;  // profiling
             } else {
+                // Only get here if a.len != b.len
+                // and there is a carry from the minlen loop
+                // and the value of the longer part is UNIT - 1
+                // but it doesn't happen in the first 1000000 Fibonacci numbers (with WIDTH = 16)
                 c->part[i] = sum - UNIT;
                 sum = 1;  // for addition, carry can only be 0 or 1
-                ++p4;  // profiling
             }
         } else {
             c->part[i] = t->part[i];
-            // ++p5;  // profiling
         }
         ++i;
     }
     if (sum) {
         c->part[i++] = sum;
-        // ++p6;  // profiling
     }
     c->len = i;
     return true;
@@ -221,7 +217,5 @@ int main(int argc, char *argv[])
     clean(&a);
     clean(&b);
     clean(&c);
-
-    printf("Loop profiling: %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64"\n", p1, p2, p3, p4, p5, p6);
     return 0;
 }
