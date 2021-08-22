@@ -125,12 +125,13 @@ static inline bool add(pBigInt a, pBigInt b, pBigInt c)
     while (i < minlen) {
         sum += a->part[i] + b->part[i];
         if (sum < UNIT) {
-            c->part[i++] = sum;
+            c->part[i] = sum;
             sum = 0;  // no carry
         } else {
-            c->part[i++] = sum - UNIT;
+            c->part[i] = sum - UNIT;
             sum = 1;  // for addition, carry can only be 0 or 1
         }
+        ++i;
     }
     while (i < maxlen) {
         if (sum) {
