@@ -100,6 +100,8 @@ static bool resize(pBigInt a, size_t newlen)
     return true;
 }
 
+static uint64_t p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0, p6 = 0;
+
 // Add a + b, put result in c
 static inline bool add(pBigInt a, pBigInt b, pBigInt c)
 {
@@ -124,22 +126,37 @@ static inline bool add(pBigInt a, pBigInt b, pBigInt c)
     PartType sum = 0;  // partial sum and carry
     while (i < minlen) {
         sum += a->part[i] + b->part[i];
-        c->part[i++] = sum % UNIT;
-        sum /= UNIT;
+        if (sum < UNIT) {
+            c->part[i++] = sum;
+            sum = 0;  // no carry
+            // ++p1;  // profiling
+        } else {
+            c->part[i++] = sum - UNIT;
+            sum = 1;  // for addition, carry can only be 0 or 1
+            // ++p2;  // profiling
+        }
     }
     while (i < maxlen) {
         if (sum) {
             sum += t->part[i];  // t = the one that's longer
-            c->part[i] = sum % UNIT;
-            sum /= UNIT;
+            if (sum < UNIT) {
+                c->part[i] = sum;
+                sum = 0;  // no carry
+                // ++p3;  // profiling
+            } else {
+                c->part[i] = sum - UNIT;
+                sum = 1;  // for addition, carry can only be 0 or 1
+                ++p4;  // profiling
+            }
         } else {
             c->part[i] = t->part[i];
+            // ++p5;  // profiling
         }
         ++i;
     }
-    while (sum) {
-        c->part[i++] = sum % UNIT;
-        sum /= UNIT;
+    if (sum) {
+        c->part[i++] = sum;
+        // ++p6;  // profiling
     }
     c->len = i;
     return true;
@@ -154,10 +171,12 @@ static void print(pBigInt a)
         return;
     }
     printf("%"PRIu64, a->part[--i]);  // no leading zeros on left-most part
-    while (i--) {
-        // Print in chunks of WIDTH digits
-        printf(" %0"WIDTH""PRIu64, a->part[i]);
-    }
+    // while (i--) {
+    //     // Print in chunks of WIDTH digits
+    //     printf(" %0"WIDTH""PRIu64, a->part[i]);
+    // }
+    // DEBUG: no full print out
+    printf(" ... %0"WIDTH""PRIu64, a->part[0]);
     printf(" (%zu)\n", a->len);  // parts count for reference
 }
 
@@ -202,5 +221,7 @@ int main(int argc, char *argv[])
     clean(&a);
     clean(&b);
     clean(&c);
+
+    printf("Loop profiling: %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64", %"PRIu64"\n", p1, p2, p3, p4, p5, p6);
     return 0;
 }
