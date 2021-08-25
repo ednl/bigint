@@ -2,7 +2,7 @@
 
 # Number of iterations the tested program will use
 #   REP = 1 billion will run in approx 0.7 s on a Mac mini M1
-REP=1000000000
+REP=200000000
 
 # Source code
 SRC='divmod.c'
