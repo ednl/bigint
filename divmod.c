@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     uint64_t a = 0, b = 1, c = 1;  // Fibonacci numbers
-    uint64_t q, r, s = 0;          // quotient, remainder, sum
+    uint64_t q = 0, r = 0, s = 0;  // quotient, remainder, sum
     uint64_t N = 0;                // repeat counter
     uint8_t  f = 0;                // which Fib number to update
 
