@@ -9,7 +9,7 @@ SRC='divmod.c'
 
 # Timing utility (install from MacPorts or Linux repo)
 TIM=hyperfine
-[ -z "$(which $TIM)" ] && { echo "App not found: $TIM" >&2; exit 2; }
+[ -z "$(which $TIM 2>/dev/null)" ] && { echo "App not found: $TIM" >&2; exit 2; }
 
 # Test these C compilers
 C1=clang
@@ -24,7 +24,7 @@ echo
 
 # Compile and run
 for CC in $C1 $C2 $C3 $C4; do
-	if [ -n "$(which $CC)" ]; then
+	if [ -n "$(which $CC 2>/dev/null)" ]; then
 		echo "---------- $CC ----------"
 		$CC --version
 		# Compile
