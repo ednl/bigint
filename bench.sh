@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# Number of iterations the tested program will use
-#   REP = 1 billion will run in approx 0.7 s on a Mac mini M1
+# Number of iterations the tested program will run
 REP=200000000
 
 # Source code
@@ -28,9 +27,13 @@ for CC in $C1 $C2 $C3 $C4; do
 	if [ -n "$(which $CC)" ]; then
 		echo "---------- $CC ----------"
 		$CC --version
+		# Compile
 		$CC -Ofast "$SRC"
+		# Show binary file size
 		ls -l a.out
+		# Check program output
 		./a.out $REP
+		# Benchmark
 	 	$TIM -w 3 -r 10 "./a.out $REP"
 	fi
 done
