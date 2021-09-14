@@ -180,7 +180,8 @@ static void print(pBigInt a)
 int main(int argc, char *argv[])
 {
     #ifdef __APPLE__
-    // Set thread priority to User Interactive = use a performance core
+    // Set thread priority to QOS_CLASS_USER_INTERACTIVE = use a performance core
+    //   to use efficiency core: QOS_CLASS_BACKGROUND
     int e = pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
     if (e) {
         printf("Pthread error: %d\n", e);
